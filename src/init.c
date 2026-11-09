@@ -35,7 +35,6 @@ static int	init_dongles(t_sim *sim)
 	while (i < sim->cfg.number_of_coders)
 	{
 		dongle = &sim->dongles[i];
-		dongle->index = i;
 		dongle->in_use = 0;
 		dongle->available_at = 0;
 		dongle->queue.size = 0;

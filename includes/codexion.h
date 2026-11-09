@@ -64,7 +64,6 @@ typedef struct s_heap
 
 typedef struct s_dongle
 {
-	int				index;
 	pthread_mutex_t	mutex;
 	int				in_use;
 	long long		available_at;
@@ -112,8 +111,6 @@ void		*monitor_routine(void *arg);
 
 int			take_dongles(t_coder *coder);
 void		release_dongles(t_coder *coder);
-void		lock_dongles(t_coder *coder);
-void		unlock_dongles(t_coder *coder);
 
 long long	take_ticket(t_sim *sim);
 void		heap_push(t_heap *heap, t_request request, t_scheduler scheduler);
