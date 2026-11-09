@@ -1,16 +1,18 @@
-*This project has been created as part of the 42 curriculum by syokota.*
+*このプロジェクトは、42 のカリキュラムの一環として syokota が作成しました。*
+
+（この README は、提出用の英語版 README の日本語訳です。提出用の `main` ブランチには英語版だけを置いています。）
 
 # Codexion
 
-## Description
+## 概要（Description）
 
-Codexion is a concurrency exercise written in C with POSIX threads. Coders sit around a round table. Between each pair of neighbours there is one USB dongle, so the number of dongles equals the number of coders. To compile, a coder needs the two dongles next to them at the same time. A coder repeats the same cycle: take two dongles, compile, put them back, debug, refactor, then ask for the dongles again.
+Codexion は、C と POSIX スレッドで書く並行処理の課題です。コーダーが丸いテーブルを囲んで座っています。隣り合う 2 人の間に USB ドングルが 1 本ずつあるので、ドングルの数はコーダーの数と同じです。コンパイルするには、両隣のドングル 2 本を同時に使う必要があります。コーダーは「ドングルを 2 本取る → コンパイル → ドングルを戻す → デバッグ → リファクタ → またドングルを取りに行く」を繰り返します。
 
-A coder burns out when they have not started a compile for `time_to_burnout` milliseconds, counted from the start of their last compile or from the start of the simulation. The simulation stops when a coder burns out or when every coder has compiled at least `number_of_compiles_required` times.
+前回のコンパイル開始（またはシミュレーション開始）から `time_to_burnout` ミリ秒の間にコンパイルを始められないと、そのコーダーはバーンアウトします。シミュレーションは、誰かがバーンアウトしたとき、または全員が `number_of_compiles_required` 回以上コンパイルしたときに止まります。
 
-Each coder is a thread, and one more thread, the monitor, watches for burnouts. Dongles are shared resources protected by mutexes. When two coders want the same dongle, the dongle is given according to a scheduler: `fifo` (first come, first served) or `edf` (earliest deadline first, where the deadline is `last_compile_start + time_to_burnout`). After a dongle is released, it cannot be taken again before `dongle_cooldown` milliseconds have passed.
+コーダー 1 人につきスレッドが 1 本あり、そのほかにバーンアウトを見張るモニターのスレッドが 1 本あります。ドングルは mutex で守る共有資源です。2 人が同じドングルを求めたときは、スケジューラに従って渡す相手を決めます。スケジューラは `fifo`（先に来た人から）か `edf`（締切の早い人から。締切は `last_compile_start + time_to_burnout`）です。戻されたドングルは、`dongle_cooldown` ミリ秒たつまで取れません。
 
-The program prints one line per state change:
+プログラムは、状態が変わるたびに 1 行出力します。
 
 ```
 timestamp_in_ms X has taken a dongle
@@ -20,35 +22,35 @@ timestamp_in_ms X is refactoring
 timestamp_in_ms X burned out
 ```
 
-## Instructions
+## 使い方（Instructions）
 
-### Build
+### ビルド
 
 ```
 make
 ```
 
-This builds the `codexion` executable with `cc -Wall -Wextra -Werror -pthread`. Object files go to `obj/`. The Makefile also has the rules `clean` (remove `obj/`), `fclean` (remove `obj/` and `codexion`) and `re` (`fclean` then `all`). Running `make` twice in a row does not relink.
+`cc -Wall -Wextra -Werror -pthread` で実行ファイル `codexion` を作ります。オブジェクトファイルは `obj/` に置きます。Makefile には `clean`（`obj/` を消す）、`fclean`（`obj/` と `codexion` を消す）、`re`（`fclean` のあと `all`）のルールもあります。続けて 2 回 `make` しても、再リンクはしません。
 
-### Run
+### 実行
 
 ```
 ./codexion number_of_coders time_to_burnout time_to_compile time_to_debug \
            time_to_refactor number_of_compiles_required dongle_cooldown scheduler
 ```
 
-| Argument | Meaning |
+| 引数 | 意味 |
 |---|---|
-| `number_of_coders` | Number of coders and dongles. Must be at least 1. |
-| `time_to_burnout` | Milliseconds a coder can go without starting a compile. |
-| `time_to_compile` | Milliseconds a compile takes. The coder holds two dongles during it. |
-| `time_to_debug` | Milliseconds spent debugging. |
-| `time_to_refactor` | Milliseconds spent refactoring. |
-| `number_of_compiles_required` | The simulation stops when every coder has compiled at least this number of times. |
-| `dongle_cooldown` | Milliseconds a dongle stays unavailable after it is released. |
-| `scheduler` | `fifo` or `edf`, written in lowercase. |
+| `number_of_coders` | コーダーとドングルの数。1 以上 |
+| `time_to_burnout` | コンパイルを始めずにいられる時間（ミリ秒） |
+| `time_to_compile` | コンパイルにかかる時間（ミリ秒）。その間ドングルを 2 本持つ |
+| `time_to_debug` | デバッグにかかる時間（ミリ秒） |
+| `time_to_refactor` | リファクタにかかる時間（ミリ秒） |
+| `number_of_compiles_required` | 全員がこの回数以上コンパイルしたら止まる |
+| `dongle_cooldown` | 戻されたドングルが使えない時間（ミリ秒） |
+| `scheduler` | `fifo` または `edf`（小文字） |
 
-The seven numbers must be written with the digits 0 to 9 only and must fit in an `int` (at most 2147483647). A sign (`+` or `-`), spaces, a decimal point or an empty string is rejected. On a wrong argument the program prints one line on the standard error and exits with status 1 without starting the simulation:
+7 つの数値は、0〜9 の数字だけで書き、`int` に収まる値（2147483647 以下）にします。符号（`+` や `-`）、空白、小数点、空の文字列はエラーです。引数が正しくないときは、標準エラー出力に 1 行出して、シミュレーションを始めずに終了コード 1 で終わります。
 
 ```
 $ ./codexion 4 800 200 200 200 5 0
@@ -63,13 +65,13 @@ $ ./codexion 4 800 200 200 200 5 0 FIFO
 Error: scheduler: 'FIFO' must be 'fifo' or 'edf'
 ```
 
-If a mutex or a thread cannot be created, or memory cannot be allocated, the program prints one line such as `Error: failed to create coder thread`, cleans up what it created, and exits with status 1. A simulation that ends, with or without a burnout, exits with status 0. With `number_of_compiles_required` set to 0 the program prints nothing and exits with status 0, because every coder has already compiled zero times.
+mutex やスレッドを作れないとき、またはメモリを確保できないときは、`Error: failed to create coder thread` のような 1 行を出し、作った分を片付けてから終了コード 1 で終わります。シミュレーションが終わったときは、バーンアウトがあってもなくても終了コード 0 です。`number_of_compiles_required` が 0 のときは、全員がすでに 0 回コンパイルしているので、何も出さずに終了コード 0 で終わります。
 
-### Examples
+### 実行例
 
-The order of lines with the same timestamp changes from run to run. These are outputs of single runs on my machine.
+同じタイムスタンプの行の順番は、実行のたびに変わります。以下は、手元のマシンで 1 回ずつ実行した出力です。
 
-Every coder compiles once, nobody burns out:
+全員が 1 回ずつコンパイルし、誰もバーンアウトしない例:
 
 ```
 $ ./codexion 4 800 200 100 100 1 0 edf
@@ -96,7 +98,7 @@ $ ./codexion 4 800 200 100 100 1 0 edf
 402 3 is compiling
 ```
 
-A setting that cannot be satisfied: coders 2 and 4 compile until 401, but coder 1 has to start again before 310.
+満たせない設定の例。コーダー 2 と 4 は 401 までコンパイルしますが、コーダー 1 は 310 までに次のコンパイルを始める必要があります。
 
 ```
 $ ./codexion 4 310 200 100 100 5 0 fifo
@@ -119,7 +121,7 @@ $ ./codexion 4 310 200 100 100 5 0 fifo
 310 1 burned out
 ```
 
-One coder has only one dongle, so they can never compile:
+コーダーが 1 人だとドングルも 1 本しかないので、コンパイルできません。
 
 ```
 $ ./codexion 1 800 200 200 200 5 0 fifo
@@ -127,197 +129,197 @@ $ ./codexion 1 800 200 200 200 5 0 fifo
 800 1 burned out
 ```
 
-## How the program runs
+## 全体の流れ
 
-1. `parse.c` checks the eight arguments.
-2. If `number_of_compiles_required` is 0, `main` returns at once.
-3. `init.c` allocates the dongle and coder arrays and initialises every mutex. Each successful step is counted, so `cleanup.c` destroys and frees only what was created.
-4. `main.c` records the start time, then creates one thread per coder and the monitor thread.
-5. Each coder thread (`coder.c`) loops: take two dongles (`dongle.c`), compile, put the dongles back, debug, refactor.
-6. The monitor thread (`monitor.c`) checks every coder about once per millisecond. It stops the simulation on a burnout or when every coder has compiled enough times.
-7. Every waiting loop checks the stop flag, so all threads return. `main` joins them, destroys the mutexes and frees the arrays.
+1. `parse.c` が 8 つの引数を確かめる。
+2. `number_of_compiles_required` が 0 なら、`main` はすぐに終わる。
+3. `init.c` がドングルとコーダーの配列を確保し、すべての mutex を初期化する。成功した段階を数えておくので、`cleanup.c` は作ったものだけを destroy し、free する。
+4. `main.c` が開始時刻を記録し、コーダーごとのスレッドとモニターのスレッドを作る。
+5. コーダーのスレッド（`coder.c`）は、ドングルを 2 本取り（`dongle.c`）、コンパイルし、ドングルを戻し、デバッグし、リファクタすることを繰り返す。
+6. モニターのスレッド（`monitor.c`）は、約 1 ミリ秒ごとに全コーダーを確かめる。バーンアウトしたとき、または全員が規定の回数コンパイルしたときに、シミュレーションを止める。
+7. 待っているループはすべて停止フラグを確かめるので、全スレッドが戻ってくる。`main` はそれらを join し、mutex を destroy し、配列を free する。
 
-All times are milliseconds since the start of the simulation, taken with `gettimeofday`. Log timestamps, deadlines and dongle cooldowns use the same clock.
+時刻はすべて、シミュレーション開始からのミリ秒で、`gettimeofday` で取ります。ログのタイムスタンプ、締切、ドングルのクールダウンは、すべて同じ時計を使います。
 
-Source files:
+ソースファイル:
 
-| File | Role |
+| ファイル | 役割 |
 |---|---|
-| `main.c` | Overall flow, thread creation and join |
-| `parse.c` | Argument checks and number conversion |
-| `init.c`, `cleanup.c` | Allocation and mutex setup, and the reverse |
-| `coder.c` | Coder thread: compile, debug, refactor |
-| `dongle.c` | Taking and releasing dongles, cooldown |
-| `heap.c` | Priority queue (binary heap) of waiting coders |
-| `scheduler.c` | FIFO and EDF ordering, ticket numbers |
-| `monitor.c` | Burnout detection and the stop condition |
-| `log.c` | Log output and the stop flag |
-| `time.c` | Clock and a sleep that can be interrupted |
+| `main.c` | 全体の流れ、スレッドの作成と join |
+| `parse.c` | 引数の確認と数値への変換 |
+| `init.c`、`cleanup.c` | 確保と mutex の初期化、およびその逆 |
+| `coder.c` | コーダーのスレッド（コンパイル、デバッグ、リファクタ） |
+| `dongle.c` | ドングルを取る・戻す、クールダウン |
+| `heap.c` | 待っているコーダーの優先度付きキュー（二分ヒープ） |
+| `scheduler.c` | FIFO と EDF の並べ方、チケット番号 |
+| `monitor.c` | バーンアウトの検出と終了条件 |
+| `log.c` | ログ出力と停止フラグ |
+| `time.c` | 時計と、途中で止められる sleep |
 
-## Blocking cases handled
+## 対処した、詰まる場面（Blocking cases handled）
 
-### Deadlock
+### デッドロック
 
-A deadlock needs four conditions at the same time (Coffman, 1971): mutual exclusion, hold and wait, no preemption, and circular wait. A dongle can only be used by one coder, a coder holds the first dongle while waiting for the second one, and nobody takes a dongle away from a coder. So the first three conditions are present, and the program removes the fourth one, circular wait.
+デッドロックは、4 つの条件が同時にそろったときに起きます（Coffman, 1971）。相互排除、保持しながら待つ、横取りできない、循環待ちの 4 つです。ドングルは 1 人しか使えず、コーダーは 1 本目を持ったまま 2 本目を待ち、誰もコーダーからドングルを取り上げません。そのため最初の 3 つはそろっていて、このプログラムは 4 つ目の循環待ちを崩します。
 
-Coders take their dongles one at a time in a fixed order. A coder with an odd number takes the right dongle first. A coder with an even number takes the left dongle first. With this rule, two neighbours always start with the dongle they share. For example, the right dongle of coder 1 and the left dongle of coder 2 are both dongle 1 (index starting at 0). Only one of them can get it. The other one holds nothing while waiting. A circle where every coder holds one dongle and waits for the next one would need two neighbours that each hold a different first dongle, and that cannot happen.
+コーダーはドングルを決まった順番で 1 本ずつ取ります。奇数番のコーダーは右のドングルから、偶数番のコーダーは左のドングルから取ります。この規則だと、隣り合う 2 人は必ず、間にあるドングルから取りに行きます。たとえば、コーダー 1 の右とコーダー 2 の左は、どちらもドングル 1（番号は 0 から）です。取れるのはどちらか 1 人だけで、もう 1 人は何も持たずに待ちます。全員が 1 本ずつ持って次の 1 本を待つ輪ができるには、隣り合う 2 人がそれぞれ別の 1 本目を持っている必要があり、それは起こりません。
 
-The mutexes themselves cannot deadlock either. A coder locks at most one dongle mutex at a time. The other locks are always taken in the same order: coder mutex, then log mutex, then stop mutex.
+mutex 同士のデッドロックも起きません。コーダーが同時に持つドングルの mutex は 1 つだけです。そのほかのロックは、必ず「コーダーの mutex → ログ用 mutex → 停止フラグ用 mutex」の順に取ります。
 
-### Waiting chains
+### 待ちの連鎖
 
-Avoiding deadlock is not enough. If waiting coders block each other in a long line, only one coder compiles at a time and coders burn out even when the parameters allow everyone to survive. The odd/even order keeps such lines short. When a coder holds their first dongle and waits for the second one, that second dongle is also the second dongle of the neighbour on the other side. Someone holding it already has both dongles and is compiling, so it comes back after one compile and one cooldown, and the line of waiting coders does not go further than that neighbour. With an odd number of coders, dongle 0 is the first dongle for one neighbour and the second dongle for the other, and there the line can be one coder longer.
+デッドロックを避けるだけでは足りません。待っているコーダー同士が長い列になって互いを止めると、1 人ずつしかコンパイルできず、全員が生き残れる設定でもバーンアウトします。偶奇の順番は、この列を短く保ちます。1 本目を持って 2 本目を待つとき、その 2 本目は、反対側の隣人にとっても 2 本目です。それを持っている人は 2 本そろえてコンパイル中なので、コンパイル 1 回とクールダウンのあとに戻ってきます。待ちの列はその隣人より先へは伸びません。コーダーが奇数人のときは、ドングル 0 が一方の隣人には 1 本目、もう一方には 2 本目になるので、そこでは列が 1 人分長くなることがあります。
 
-### Fair arbitration and starvation
+### 公平な調停と飢餓
 
-Each dongle has its own priority queue of waiting coders, stored as a binary heap. When a coder asks for dongles, they get a ticket number from a shared counter and enter the queues of both of their dongles at once. A coder takes their first dongle only when they are at the head of its queue.
+各ドングルは、待っているコーダーの優先度付きキューを 1 つずつ持ち、二分ヒープで管理します。コーダーはドングルを求めるとき、共有のカウンタからチケット番号を受け取り、両方のドングルの待ち行列に同時に入ります。1 本目のドングルは、その待ち行列の先頭のときだけ取れます。
 
-- With `fifo`, the queue is ordered by ticket number, so the coder who asked first comes first.
-- With `edf`, the queue is ordered by deadline (`last_compile_start + time_to_burnout`). When two deadlines are equal, the smaller ticket number wins. Ticket numbers are never equal, so the order is always fully decided.
+- `fifo` では、チケット番号の順に並べるので、先に求めた人が先になります。
+- `edf` では、締切（`last_compile_start + time_to_burnout`）の順に並べます。締切が同じときは、チケット番号の小さい方を先にします。チケット番号は全員で違うので、順番は必ず 1 つに決まります。
 
-The second dongle follows the same rule with one exception. A coder who already holds their first dongle may take the second one before the coder at the head of its queue, if the head coder's deadline is later than `now + time_to_compile + dongle_cooldown`. Taking the second dongle starts a compile at once, so the dongle comes back after one compile and one cooldown, and the head coder can still use it before their deadline. Without this exception, a coder who is still waiting for their first dongle blocks a free second dongle, and the waiting chains described above come back. The exception also applies with `fifo`, so `fifo` follows arrival order except in this case.
+2 本目のドングルも同じ規則ですが、例外が 1 つあります。すでに 1 本目を持っているコーダーは、待ち行列の先頭のコーダーの締切が `今 + time_to_compile + dongle_cooldown` より後なら、先頭を追い越して 2 本目を取れます。2 本目を取るとすぐにコンパイルが始まるので、そのドングルはコンパイル 1 回とクールダウンのあとに戻り、先頭のコーダーは締切までにそれを使えます。この例外がないと、まだ 1 本目を待っているコーダーが空いている 2 本目をふさぎ、前の節の待ちの連鎖が戻ってきます。この例外は `fifo` でも使うので、`fifo` はこの場面だけ来た順から外れます。
 
-Entering both queues at the start matters for `edf`. In an earlier version a coder joined the queue of their second dongle only after getting the first one. A coder with a close deadline was then invisible in that queue while waiting for their first dongle, and a coder with a later deadline could take the second dongle first. With `3 650 200 100 100 20 0 edf` (three coders need 600 ms per round, so there are 50 ms of slack) that version burned out in 5 runs out of 5. The current version survived 5 runs out of 5.
+最初に両方の待ち行列に入ることは、`edf` で大事です。以前の版では、2 本目の待ち行列には 1 本目を取ってから入っていました。そのため、締切の近いコーダーが 1 本目を待っている間はその待ち行列に見えず、締切の遅いコーダーが先に 2 本目を取れてしまいました。`3 650 200 100 100 20 0 edf`（3 人なら 1 周 600 ms なので、余裕は 50 ms）では、その版は 5 回中 5 回バーンアウトしました。今の版は 5 回中 5 回生き残りました。
 
-The subject asks for liveness under `edf` when the parameters are feasible. I do not have a proof for every feasible setting. The settings I ran, five runs each unless written otherwise, are listed in [Limits](#limits).
+subject は、パラメータが実現可能なら `edf` で飢餓を起こさないことを求めています。実現可能なすべての設定についての証明はありません。試した設定は、断りがない限り各 5 回で、[限界](#限界) にまとめています。
 
-### Cooldown
+### クールダウン
 
-Each dongle stores `available_at`, the time when it can be used again. Releasing a dongle sets `available_at = now + dongle_cooldown`. A coder can take a dongle only if `now >= available_at`. The value is read and written under the dongle mutex, together with the queue and the `in_use` flag, so the three checks happen at one point in time.
+各ドングルは、次に使えるようになる時刻 `available_at` を持ちます。ドングルを戻すと `available_at = 今 + dongle_cooldown` になります。コーダーは `今 >= available_at` のときだけドングルを取れます。この値は、待ち行列と `in_use` と一緒に、ドングルの mutex の中で読み書きするので、3 つの確認は同じ時点で行われます。
 
-### Burnout detection
+### バーンアウトの検出
 
-Each coder has a `last_compile_start` value and a mutex protecting it. The coder writes it when a compile starts. The monitor reads it about once per millisecond and reports a burnout when `now - last_compile_start >= time_to_burnout`. The subject requires the burnout line within 10 ms of the real burnout. In my runs (seven settings that end in a burnout, five runs each) the line was printed 0 or 1 ms after the deadline.
+各コーダーは `last_compile_start` と、それを守る mutex を持ちます。コーダーはコンパイルを始めるときにこれを書きます。モニターは約 1 ミリ秒ごとにこれを読み、`今 - last_compile_start >= time_to_burnout` ならバーンアウトとして知らせます。subject は、実際のバーンアウトから 10 ms 以内にログを出すことを求めています。手元で試した範囲（バーンアウトで終わる 7 つの設定を各 5 回）では、締切から 0 または 1 ms 後に出ました。
 
-The monitor keeps the coder mutex locked from the check until the burnout line is printed. Otherwise the coder could start a compile between the check and the print, and the log would show `is compiling` right before `burned out` for the same coder. With the lock held, the coder waits on its own mutex, and when it continues the stop flag is already set and its line is not printed.
+モニターは、判定からバーンアウトの行を出し終えるまで、そのコーダーの mutex を持ったままにします。そうしないと、判定と出力の間にコーダーがコンパイルを始め、同じコーダーの `is compiling` の直後に `burned out` が出ることがあります。mutex を持ったままなら、コーダーは自分の mutex で待たされ、続きを進めるときには停止フラグが立っているので、その行は出ません。
 
-### Log serialization
+### ログの直列化
 
-Every state line goes through `log_state` in `log.c`. It locks the log mutex, checks the stop flag, prints the line with `printf` if the simulation is still running, and unlocks. Two lines can never be mixed, and no line appears after `burned out`, because the monitor sets the stop flag inside the same log mutex before printing `burned out`. The timestamp is read after the log mutex is taken, so printed timestamps never go backwards.
+状態のログはすべて `log.c` の `log_state` を通します。ログ用 mutex を取り、停止フラグを確かめ、シミュレーションが続いていれば `printf` で 1 行出し、mutex を外します。2 つの行が混ざることはありません。また、モニターは `burned out` を出す前に、同じログ用 mutex の中で停止フラグを立てるので、`burned out` の後には何も出ません。タイムスタンプはログ用 mutex を取った後で読むので、出力される時刻が前後することはありません。
 
-### Stop and cleanup
+### 停止と片付け
 
-Coders do not get woken up by anyone. Every waiting loop and every sleep checks the stop flag every 0.5 ms and returns when it is set. The main thread then joins all threads and destroys the mutexes. A coder that is still in a dongle queue when the simulation stops leaves without removing itself, because the queues are freed with the dongles.
+コーダーは誰かに起こされることはありません。待ちのループと sleep は、どれも 0.5 ms ごとに停止フラグを確かめ、立っていれば戻ります。そのあとメインスレッドが全スレッドを join し、mutex を destroy します。止まったときにまだドングルの待ち行列にいるコーダーは、自分を取り除かずに終わります。待ち行列はドングルと一緒に解放されるためです。
 
-### Special cases
+### 特別な場合
 
-- One coder: there is only one dongle, so the coder prints `has taken a dongle` once and waits until the monitor reports the burnout.
-- `number_of_compiles_required` is 0: the program exits before creating any thread.
-- `time_to_burnout` is 0: the first check of the monitor reports a burnout.
-- `time_to_compile`, `time_to_debug`, `time_to_refactor` or `dongle_cooldown` is 0: no special handling, the wait lasts zero milliseconds.
+- コーダーが 1 人のとき: ドングルは 1 本しかないので、`has taken a dongle` を 1 回出し、モニターがバーンアウトを知らせるまで待ちます。
+- `number_of_compiles_required` が 0 のとき: スレッドを作る前に終わります。
+- `time_to_burnout` が 0 のとき: モニターの最初の確認でバーンアウトになります。
+- `time_to_compile`、`time_to_debug`、`time_to_refactor`、`dongle_cooldown` が 0 のとき: 特別な扱いはせず、待ち時間が 0 ミリ秒になるだけです。
 
-## Thread synchronization mechanisms
+## スレッドの同期の仕組み（Thread synchronization mechanisms）
 
-### Threads
+### スレッド
 
-A thread is a flow of execution inside a process. All threads of a process share the same memory, which is why they can share the dongles and the log, and also why that shared memory needs protection. Each coder is one thread created with `pthread_create`, as the subject requires.
+スレッドは、1 つのプロセスの中で動く実行の流れです。同じプロセスのスレッドはメモリを共有します。そのためドングルやログを共有でき、同じ理由で、共有するメモリは守る必要があります。subject の指示どおり、コーダー 1 人を `pthread_create` で作ったスレッド 1 本にしています。
 
-The monitor is a separate thread. A coder cannot watch its own burnout while it is blocked waiting for a dongle or sleeping, and it does not know the state of other coders. A thread that only watches can report a burnout at the right time whatever the coders are doing.
+モニターは別のスレッドです。コーダーはドングルを待っている間や sleep している間、自分のバーンアウトを見張れず、ほかのコーダーの状態も知りません。見張るだけのスレッドがあれば、コーダーが何をしていても、正しい時刻にバーンアウトを知らせられます。
 
-### Mutexes
+### mutex
 
-A mutex (`pthread_mutex_t`) lets one thread at a time run the code between `pthread_mutex_lock` and `pthread_mutex_unlock`. The program uses five kinds:
+mutex（`pthread_mutex_t`）は、`pthread_mutex_lock` と `pthread_mutex_unlock` の間のコードを、同時に 1 つのスレッドしか実行できないようにする仕組みです。このプログラムは 5 種類を使います。
 
-| Mutex | Count | Protects |
+| mutex | 数 | 守るもの |
 |---|---|---|
-| Dongle mutex | one per dongle | `in_use`, `available_at` and the waiting queue of that dongle |
-| Coder mutex | one per coder | `last_compile_start` and `compile_count` of that coder |
-| `log_mutex` | one | standard output |
-| `stop_mutex` | one | `stop_flag` |
-| `ticket_mutex` | one | the ticket counter `next_ticket` |
+| ドングルの mutex | ドングルごとに 1 つ | そのドングルの `in_use`、`available_at`、待ち行列 |
+| コーダーの mutex | コーダーごとに 1 つ | そのコーダーの `last_compile_start` と `compile_count` |
+| `log_mutex` | 1 つ | 標準出力 |
+| `stop_mutex` | 1 つ | `stop_flag` |
+| `ticket_mutex` | 1 つ | チケットのカウンタ `next_ticket` |
 
-The coder mutexes are separate so that the monitor reading one coder does not stop the others. The stop flag has its own mutex because coders read it every 0.5 ms, and these reads should not wait behind log output.
+コーダーの mutex を人数分に分けているのは、モニターが 1 人を読んでいる間、ほかのコーダーを止めないためです。停止フラグに専用の mutex を持たせているのは、コーダーが 0.5 ms ごとに読むので、その読み出しをログ出力の順番待ちに巻き込まないためです。
 
-### Shared data
+### 共有データ
 
-| Data | Written by | Read by | Protected by |
+| データ | 書く人 | 読む人 | 守るもの |
 |---|---|---|---|
-| Dongle `in_use`, `available_at`, queue | coders | coders | dongle mutex |
-| `last_compile_start` | its coder | its coder, monitor | coder mutex |
-| `compile_count` | its coder | monitor | coder mutex |
-| `stop_flag` | monitor, main thread on a creation error | everyone | `stop_mutex` |
-| `next_ticket` | coders | coders | `ticket_mutex` |
-| Standard output | coders, monitor | | `log_mutex` |
-| Arguments, start time | main thread before the threads start | everyone | nothing, they never change after the threads start |
+| ドングルの `in_use`、`available_at`、待ち行列 | コーダー | コーダー | ドングルの mutex |
+| `last_compile_start` | そのコーダー | そのコーダー、モニター | コーダーの mutex |
+| `compile_count` | そのコーダー | モニター | コーダーの mutex |
+| `stop_flag` | モニター、作成エラーのときのメインスレッド | 全員 | `stop_mutex` |
+| `next_ticket` | コーダー | コーダー | `ticket_mutex` |
+| 標準出力 | コーダー、モニター | | `log_mutex` |
+| 引数、開始時刻 | スレッドを作る前のメインスレッド | 全員 | なし（スレッドを作った後は変わらない） |
 
-### Races that are prevented
+### 防いでいる競合
 
-- Two neighbours want the same free dongle: both lock the dongle mutex, so the check of `in_use` and the write `in_use = 1` happen together for one coder, and the other one sees `in_use == 1`.
-- Two coders ask for dongles at the same moment: the ticket counter is increased under `ticket_mutex`, so they get different numbers.
-- A coder starts a compile while the monitor checks it: both use the coder mutex, so the monitor sees either the old or the new `last_compile_start`, never a half-written value.
+- 隣り合う 2 人が同じ空いているドングルを求めた場合: 2 人ともドングルの mutex を取るので、`in_use` の確認と `in_use = 1` の書き込みは 1 人の中でひとまとまりに行われ、もう 1 人には `in_use == 1` が見えます。
+- 2 人が同じ瞬間にドングルを求めた場合: チケットのカウンタは `ticket_mutex` の中で増やすので、2 人は違う番号を受け取ります。
+- モニターが確かめている最中にコーダーがコンパイルを始めた場合: どちらもコーダーの mutex を使うので、モニターに見えるのは古い `last_compile_start` か新しい値のどちらかで、書きかけの値は見えません。
 
-### Communication between coders and the monitor
+### コーダーとモニターのやりとり
 
-Coders and the monitor do not send messages to each other. They share two values per coder and the stop flag.
+コーダーとモニターは、互いにメッセージを送りません。コーダーごとの 2 つの値と、停止フラグを共有します。
 
-1. A coder starts a compile: it locks its coder mutex, writes `last_compile_start = now`, unlocks, and prints `is compiling`.
-2. The monitor locks the same mutex and computes `now - last_compile_start`.
-3. If it is a burnout, the monitor, still holding the coder mutex, locks `log_mutex`, sets `stop_flag` under `stop_mutex`, prints `burned out` and unlocks.
-4. Every coder sees `stop_flag` at its next check, at most 0.5 ms later, and returns.
+1. コーダーはコンパイルを始めるとき、自分の mutex を取り、`last_compile_start = 今` を書き、mutex を外して `is compiling` を出す。
+2. モニターは同じ mutex を取り、`今 - last_compile_start` を計算する。
+3. バーンアウトなら、モニターはコーダーの mutex を持ったまま `log_mutex` を取り、`stop_mutex` の中で `stop_flag` を立て、`burned out` を出して mutex を外す。
+4. 各コーダーは次の確認（長くても 0.5 ms 後）で `stop_flag` に気づき、戻る。
 
-When a coder finishes a compile, it increases `compile_count` under its mutex. When every count reaches `number_of_compiles_required`, the monitor sets the stop flag under `log_mutex` without printing anything.
+コーダーはコンパイルを終えると、自分の mutex の中で `compile_count` を 1 増やします。全員の回数が `number_of_compiles_required` に達すると、モニターは何も出さずに、`log_mutex` の中で停止フラグを立てます。
 
-### Why there are no condition variables
+### 条件変数を使わない理由
 
-The subject allows `pthread_cond_t` for waiting queues. I used short polling instead: a waiting coder unlocks, sleeps 0.5 ms with `usleep`, locks again and checks. A coder can be blocked for three different reasons (the dongle is in use, the cooldown is not over, another coder has priority), and a single loop checks all three plus the stop flag. With condition variables the program would need `pthread_cond_timedwait` with an absolute time for the cooldown, a broadcast on every release, and a broadcast to every dongle when the simulation stops. Each missing broadcast would leave a thread sleeping. Polling costs more CPU time, which I accepted.
+subject は、待ち行列に `pthread_cond_t` を使ってよいとしています。このプログラムは代わりに短いポーリングを使います。待っているコーダーは mutex を外し、`usleep` で 0.5 ms 眠り、もう一度 mutex を取って確かめます。コーダーが待たされる理由は 3 つ（ドングルが使用中、クールダウンが明けていない、ほかのコーダーが優先）あり、1 つのループでその 3 つと停止フラグを確かめられます。条件変数で同じことをすると、クールダウンのために絶対時刻を指定した `pthread_cond_timedwait`、解放のたびの broadcast、止めるときの全ドングルへの broadcast が必要になります。broadcast を 1 か所でも忘れると、スレッドが眠ったままになります。ポーリングは CPU 時間を多く使いますが、それは受け入れました。
 
-## Design choices and values
+## 設計の選択と値の根拠
 
-### Why a heap with only two coders
+### 2 人しか待たないのにヒープを使う理由
 
-At most two coders, the two neighbours, ever wait for the same dongle, so each heap has a fixed capacity of 2 and lives inside the dongle structure (no allocation). The subject requires a priority queue for the scheduler, and the heap gives one structure for both policies: `has_priority` in `scheduler.c` is the only part that differs between `fifo` and `edf`. The heap can remove an element that is not at the head, which the overtaking rule needs.
+1 本のドングルを待つのは両隣の 2 人だけなので、ヒープの容量は 2 に固定し、ドングルの構造体の中に置いています（メモリ確保なし）。subject はスケジューラに優先度付きキューを使うことを求めています。ヒープなら 1 つの構造で 2 つの方針を扱え、`fifo` と `edf` で違うのは `scheduler.c` の `has_priority` だけです。追い越しの規則のために、ヒープは先頭以外の要素も取り除けます。
 
-### Why ticket numbers
+### チケット番号を使う理由
 
-FIFO could use the request time as the key, but two requests can happen in the same millisecond (at the start of the simulation every coder asks at 0 ms), and a tie broken by coder number would always favour the same coders. A global counter gives every request a different number, and the same number is used in both queues of a coder.
+FIFO のキーに要求した時刻を使うこともできます。しかし 2 つの要求が同じミリ秒に重なることがあり（シミュレーション開始時は全員が 0 ms に要求する）、同点をコーダー番号で決めると、毎回同じコーダーが有利になります。全体で 1 つのカウンタを使えば、要求ごとに違う番号になります。1 人のコーダーの 2 つの待ち行列には同じ番号を使います。
 
-### Why 0.5 ms and 1 ms
+### 0.5 ms と 1 ms の理由
 
-`POLL_INTERVAL_US` (500) is the sleep between two checks of a waiting coder and the step of the interruptible sleep. `MONITOR_INTERVAL_US` (1000) is the pause between two rounds of the monitor. One millisecond is well inside the 10 ms allowed for the burnout message. I also tried polling at 250 and 100 microseconds on three settings with 10 ms of slack, ten runs each. This was measured with the previous dongle rule (design 3 below). A round took 400 to 407 ms at 500 microseconds and 400 to 404 ms at 100 microseconds, but the number of burnouts did not go down (0 out of 30 at 500, 1 out of 30 at 250 and at 100). Those burnouts came from the operating system waking a thread late, which a shorter interval does not fix, so I kept 500.
+`POLL_INTERVAL_US`（500）は、待っているコーダーが確認と確認の間に眠る時間で、途中で止められる sleep の刻みでもあります。`MONITOR_INTERVAL_US`（1000）は、モニターの見回りと見回りの間の時間です。1 ミリ秒は、バーンアウトのログに許された 10 ms に十分収まります。余裕が 10 ms の 3 つの設定で、ポーリングを 250 と 100 マイクロ秒にしたものも各 10 回試しました。この測定は、1 つ前のドングルの規則（下の 3 つ目の設計）で行いました。1 周は、500 マイクロ秒で 400〜407 ms、100 マイクロ秒で 400〜404 ms でしたが、バーンアウトの回数は減りませんでした（500 で 30 回中 0 回、250 と 100 でそれぞれ 30 回中 1 回）。これらのバーンアウトは、OS がスレッドを起こすのが遅れたためで、間隔を短くしても防げないので、500 のままにしました。
 
-### Why `gettimeofday` and milliseconds
+### `gettimeofday` とミリ秒を使う理由
 
-The subject recommends `gettimeofday`, and every argument and log timestamp is in milliseconds. All times are stored as `long long` milliseconds since the start, so adding a deadline to a large `time_to_burnout` cannot overflow.
+subject は `gettimeofday` を勧めていて、引数もログのタイムスタンプもミリ秒です。時刻はすべて開始からのミリ秒を `long long` で持つので、大きな `time_to_burnout` を足して締切を作ってもあふれません。
 
-### When the compile count increases
+### コンパイル回数を増やす時点
 
-`compile_count` increases when the compile wait is over, before the dongles go back. The subject says the simulation stops when every coder "has compiled" enough times, so a compile counts once it is finished. `last_compile_start` is written when the compile starts, because burnout is about starting a compile. The coder prints `is debugging` before releasing the dongles. If it released first, a neighbour could print `is compiling` before this coder's `is debugging`, and the log would look like two neighbours compiling together.
+`compile_count` は、コンパイルの待ちが終わり、ドングルを戻す前に増やします。subject は、全員が十分な回数「コンパイルし終えた（has compiled）」ら止まるとしているので、終わった時点で 1 回と数えます。`last_compile_start` はコンパイルを始めるときに書きます。バーンアウトは、コンパイルを始めたかどうかで決まるためです。コーダーは、ドングルを戻す前に `is debugging` を出します。先に戻すと、このコーダーの `is debugging` より先に隣人が `is compiling` を出すことがあり、隣同士が同時にコンパイルしているようにログが見えてしまいます。
 
-### Designs I tried and dropped
+### 試して捨てた設計
 
-All four were measured with five runs per setting.
+4 つとも、設定ごとに 5 回ずつ実行して測りました。
 
-1. Wait without holding anything until both dongles are free and the coder is at the head of both queues, then take both at once. This removes hold and wait, but a coder waiting at the head of one queue blocked a free dongle for the neighbour on the other side, and those waits chained around the table. With `5 800 200 200 200 edf` only one coder compiled at a time, and the gap between two compiles of one coder reached 1001 ms.
-2. Take dongles one at a time, lower index first, and join the second queue after getting the first dongle. With 200 coders (`200 1000 100 100 100`) coders holding one dongle waited for each other in long lines. The longest gap between two compiles of one coder was 1502 ms, fifteen compile times, and 3 runs out of 5 burned out.
-3. The odd/even order, still joining the second queue late. Large tables worked, but `3 650 200 100 100 edf` burned out 5 times out of 5, as explained in [Fair arbitration and starvation](#fair-arbitration-and-starvation).
-4. Join both queues at once, with no overtaking. The three-coder case worked, but the waiting chains of design 1 came back: `5 800`, `4 410` and 200 coders burned out in every run.
+1. 何も持たずに、2 本とも空いて両方の待ち行列で先頭になるまで待ち、2 本同時に取る。「保持しながら待つ」は崩せますが、片方の待ち行列の先頭で待っているコーダーが、反対側の隣人にとって空いているドングルをふさぎ、その待ちがテーブルを一周するように連鎖しました。`5 800 200 200 200 edf` では 1 人ずつしかコンパイルせず、1 人のコーダーのコンパイルの間隔が 1001 ms まで開きました。
+2. 番号の小さいドングルから 1 本ずつ取り、2 本目の待ち行列には 1 本目を取ってから入る。200 人（`200 1000 100 100 100`）では、1 本持ったコーダー同士が長い列になって待ちました。1 人のコーダーのコンパイルの間隔は最大 1502 ms（コンパイル 15 回分）で、5 回中 3 回バーンアウトしました。
+3. 偶奇の順番にし、2 本目の待ち行列には 1 本目を取ってから入る。人数の多い設定は通りましたが、[公平な調停と飢餓](#公平な調停と飢餓) に書いたとおり、`3 650 200 100 100 edf` が 5 回中 5 回バーンアウトしました。
+4. 最初に両方の待ち行列に入り、追い越しはしない。3 人の設定は通りましたが、1 つ目の設計の待ちの連鎖が戻り、`5 800`、`4 410`、200 人のどれも毎回バーンアウトしました。
 
-## Limits
+## 限界
 
-These results come from macOS on my machine. The 42 computers run Linux, so the numbers there can differ.
+以下は、手元の macOS で測った結果です。42 のマシンは Linux なので、数字は変わることがあります。
 
-Settings that did not burn out in any of five runs: `3 650 200 100 100 edf`, `3 700 200 100 100` with a cooldown of 20 (`edf`), `3 800 200 200 200 fifo`, `5 610 200 100 100 edf`, `5 800 200 200 200` (`edf` and `fifo`), `4 410 200 100 100 fifo`, `4 410 200 200 0 edf`, `7 1000 200 100 100` with a cooldown of 10 (`edf`), `199 1000 100 100 100 edf` and `200 1000 100 100 100 edf`.
+5 回とも生き残った設定: `3 650 200 100 100 edf`、`3 700 200 100 100`（クールダウン 20、`edf`）、`3 800 200 200 200 fifo`、`5 610 200 100 100 edf`、`5 800 200 200 200`（`edf` と `fifo`）、`4 410 200 100 100 fifo`、`4 410 200 200 0 edf`、`7 1000 200 100 100`（クールダウン 10、`edf`）、`199 1000 100 100 100 edf`、`200 1000 100 100 100 edf`。
 
-`5 650 200 100 100 edf` (50 ms of slack) burned out in 2 runs out of 5 in one series. A second series of 40 runs had no burnout. I did not find the cause of the first two.
+`5 650 200 100 100 edf`（余裕 50 ms）は、ある 5 回の実行で 2 回バーンアウトしました。続けて 40 回実行したときは 0 回でした。最初の 2 回の原因は分かっていません。
 
-Settings with about 10 ms of slack can burn out. `4 410 200 100 100 edf` burned out in 3 runs out of 5 and `4 450 200 100 100` with a cooldown of 20 in 2 runs out of 5. In one of these logs a debug phase of 100 ms took 122 ms because the thread was woken late, and a 10 ms margin cannot absorb that.
+余裕が 10 ms 前後の設定は、バーンアウトすることがあります。`4 410 200 100 100 edf` は 5 回中 3 回、`4 450 200 100 100`（クールダウン 20）は 5 回中 2 回バーンアウトしました。そのうちの 1 つのログでは、100 ms のデバッグに、スレッドを起こすのが遅れて 122 ms かかっていました。10 ms の余裕では、この遅れを吸収できません。
 
-`fifo` ignores deadlines, so it can let a coder burn out where `edf` would not. The subject asks for liveness only under `edf`.
+`fifo` は締切を見ないので、`edf` なら生き残る設定でもバーンアウトすることがあります。subject が飢餓を起こさないことを求めているのは `edf` だけです。
 
-## Resources
+## 参考資料（Resources）
 
-- POSIX manual pages: `pthread_create(3)`, `pthread_join(3)`, `pthread_mutex_lock(3)`, `gettimeofday(2)`, `usleep(3)`
-- E. G. Coffman, M. J. Elphick, A. Shoshani, "System Deadlocks", ACM Computing Surveys 3(2), 1971 (the four conditions for deadlock)
-- E. W. Dijkstra, "Hierarchical ordering of sequential processes" (EWD310), 1971 (the dining philosophers problem, which Codexion is based on)
-- C. L. Liu, J. W. Layland, "Scheduling Algorithms for Multiprogramming in a Hard-Real-Time Environment", Journal of the ACM 20(1), 1973 (earliest deadline first)
-- T. H. Cormen, C. E. Leiserson, R. L. Rivest, C. Stein, "Introduction to Algorithms", chapter 6 (binary heaps and priority queues)
-- Clang documentation, ThreadSanitizer (used to look for data races while testing)
+- POSIX のマニュアル: `pthread_create(3)`、`pthread_join(3)`、`pthread_mutex_lock(3)`、`gettimeofday(2)`、`usleep(3)`
+- E. G. Coffman, M. J. Elphick, A. Shoshani, "System Deadlocks", ACM Computing Surveys 3(2), 1971（デッドロックの 4 つの条件）
+- E. W. Dijkstra, "Hierarchical ordering of sequential processes" (EWD310), 1971（Codexion のもとになった食事する哲学者の問題）
+- C. L. Liu, J. W. Layland, "Scheduling Algorithms for Multiprogramming in a Hard-Real-Time Environment", Journal of the ACM 20(1), 1973（締切の早い順のスケジューリング）
+- T. H. Cormen, C. E. Leiserson, R. L. Rivest, C. Stein, "Introduction to Algorithms", 第 6 章（二分ヒープと優先度付きキュー）
+- Clang のドキュメント、ThreadSanitizer（テストでデータ競合を探すのに使った）
 
-### Use of AI
+### AI の使い方
 
-I used Claude Code (Anthropic) in these parts of the project:
+Claude Code（Anthropic）を、次の部分で使いました。
 
-- Design: discussing options for each design decision. The decisions and the rejected options were kept in a design memo, and each change was confirmed by me before the code changed.
-- Code: writing the code one step at a time (header, argument check, setup and cleanup, heap and dongles, coders, monitor, log and time, Makefile). I reviewed each step before the next one.
-- Testing: writing throwaway test programs that are not in this repository (stand-in functions for parts not yet written, log checkers, timing measurements, ThreadSanitizer and `leaks` runs). The measurements in this README come from those runs.
-- Documentation: a first draft of this README, which I checked against the code.
+- 設計: 各設計判断の選択肢の検討。決めたことと却下した案は設計メモに残し、変更はコードを変える前に私が確認しました。
+- コード: 段階ごとにコードを書くこと（ヘッダ、引数チェック、初期化と片付け、ヒープとドングル、コーダー、モニター、ログと時間、Makefile）。各段階を私が確認してから次に進みました。
+- テスト: このリポジトリに入れていない使い捨てのテストプログラムを書くこと（まだ書いていない部分の仮の関数、ログの検査、時間の測定、ThreadSanitizer と `leaks` での実行）。この README の数字は、それらの実行から取りました。
+- 文書: この README の下書き。コードと照らし合わせて確認しました。
