@@ -12,24 +12,6 @@
 
 #include "codexion.h"
 
-long long	take_ticket(t_sim *sim)
-{
-	long long	ticket;
-
-	pthread_mutex_lock(&sim->ticket_mutex);
-	sim->next_ticket++;
-	ticket = sim->next_ticket;
-	pthread_mutex_unlock(&sim->ticket_mutex);
-	return (ticket);
-}
-
-static int	has_priority(t_request a, t_request b, t_scheduler scheduler)
-{
-	if (scheduler == EDF && a.deadline != b.deadline)
-		return (a.deadline < b.deadline);
-	return (a.ticket < b.ticket);
-}
-
 static void	swap_requests(t_request *a, t_request *b)
 {
 	t_request	tmp;
@@ -39,14 +21,10 @@ static void	swap_requests(t_request *a, t_request *b)
 	*b = tmp;
 }
 
-void	heap_push(t_heap *heap, t_request request, t_scheduler scheduler)
+static void	sift_up(t_heap *heap, int child, t_scheduler scheduler)
 {
-	int	child;
 	int	parent;
 
-	child = heap->size;
-	heap->items[child] = request;
-	heap->size++;
 	parent = (child - 1) / 2;
 	while (child > 0
 		&& has_priority(heap->items[child], heap->items[parent], scheduler))
@@ -57,15 +35,11 @@ void	heap_push(t_heap *heap, t_request request, t_scheduler scheduler)
 	}
 }
 
-void	heap_pop(t_heap *heap, t_scheduler scheduler)
+static void	sift_down(t_heap *heap, int parent, t_scheduler scheduler)
 {
-	int	parent;
 	int	child;
 
-	heap->size--;
-	heap->items[0] = heap->items[heap->size];
-	parent = 0;
-	child = 1;
+	child = parent * 2 + 1;
 	while (child < heap->size)
 	{
 		if (child + 1 < heap->size
@@ -78,4 +52,26 @@ void	heap_pop(t_heap *heap, t_scheduler scheduler)
 		parent = child;
 		child = parent * 2 + 1;
 	}
+}
+
+void	heap_push(t_heap *heap, t_request request, t_scheduler scheduler)
+{
+	heap->items[heap->size] = request;
+	heap->size++;
+	sift_up(heap, heap->size - 1, scheduler);
+}
+
+void	heap_remove(t_heap *heap, long long ticket, t_scheduler scheduler)
+{
+	int	i;
+
+	i = 0;
+	while (heap->items[i].ticket != ticket)
+		i++;
+	heap->size--;
+	if (i == heap->size)
+		return ;
+	heap->items[i] = heap->items[heap->size];
+	sift_down(heap, i, scheduler);
+	sift_up(heap, i, scheduler);
 }

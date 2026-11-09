@@ -113,8 +113,9 @@ int			take_dongles(t_coder *coder);
 void		release_dongles(t_coder *coder);
 
 long long	take_ticket(t_sim *sim);
+int			has_priority(t_request a, t_request b, t_scheduler scheduler);
 void		heap_push(t_heap *heap, t_request request, t_scheduler scheduler);
-void		heap_pop(t_heap *heap, t_scheduler scheduler);
+void		heap_remove(t_heap *heap, long long ticket, t_scheduler scheduler);
 
 void		log_state(t_coder *coder, const char *message);
 void		log_burnout(t_coder *coder);

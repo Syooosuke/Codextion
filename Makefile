@@ -20,7 +20,7 @@ HEADER		= includes/codexion.h
 SRC_DIR		= src
 OBJ_DIR		= obj
 SRCS		= main.c parse.c init.c cleanup.c coder.c dongle.c heap.c \
-			  monitor.c log.c time.c
+			  scheduler.c monitor.c log.c time.c
 OBJS		= $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 
 all: $(NAME)
