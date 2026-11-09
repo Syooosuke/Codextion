@@ -269,7 +269,7 @@ At most two coders, the two neighbours, ever wait for the same dongle, so each h
 
 ### Why ticket numbers
 
-FIFO could use the request time as the key, but two requests often happen in the same millisecond, and a tie broken by coder number would always favour the same coders. A global counter gives every request a different number, and the same number is used in both queues of a coder.
+FIFO could use the request time as the key, but two requests can happen in the same millisecond (at the start of the simulation every coder asks at 0 ms), and a tie broken by coder number would always favour the same coders. A global counter gives every request a different number, and the same number is used in both queues of a coder.
 
 ### Why 0.5 ms and 1 ms
 
