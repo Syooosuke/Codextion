@@ -99,6 +99,7 @@ typedef struct s_sim
 	int				coder_mutexes_ready;
 	int				sim_mutexes_ready;
 	int				coder_threads_started;
+	int				monitor_started;
 }	t_sim;
 
 int			parse_args(int argc, char **argv, t_config *cfg);
