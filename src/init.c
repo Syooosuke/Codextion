@@ -59,8 +59,8 @@ static int	init_coders(t_sim *sim)
 	{
 		coder = &sim->coders[i];
 		coder->id = i + 1;
-		coder->left = &sim->dongles[i];
-		coder->right = &sim->dongles[(i + 1) % count];
+		coder->left = &sim->dongles[coder->id - 1];
+		coder->right = &sim->dongles[coder->id % count];
 		coder->last_compile_start = 0;
 		coder->compile_count = 0;
 		coder->sim = sim;
