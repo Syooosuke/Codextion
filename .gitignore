@@ -1,0 +1,5 @@
+codexion_design.md
+codexion
+obj/
+*.o
+tests/
